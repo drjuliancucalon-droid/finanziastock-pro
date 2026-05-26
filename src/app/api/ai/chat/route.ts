@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Lazy initialization: do NOT instantiate at module level to avoid
+// build-time errors when GROQ_API_KEY is not set in the build environment.
+let _groq: Groq | null = null;
+function getGroq(): Groq {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  return _groq;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const groq = getGroq();
     const { question, context } = await request.json();
     
     if (!question) {
